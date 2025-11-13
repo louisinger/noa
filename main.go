@@ -38,6 +38,41 @@ func main() {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
+	case "taptree":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: taptree command requires a subcommand")
+			fmt.Println("Usage: noa taptree <decode|encode> [arguments]")
+			os.Exit(1)
+		}
+		subcmd := os.Args[2]
+		switch subcmd {
+		case "decode":
+			if len(os.Args) < 4 {
+				fmt.Println("Error: taptree decode requires an input argument")
+				fmt.Println("Usage: noa taptree decode <input>")
+				os.Exit(1)
+			}
+			input := os.Args[3]
+			if err := command.RunTaptreeDecode(input); err != nil {
+				fmt.Printf("Error: %v\n", err)
+				os.Exit(1)
+			}
+		case "encode":
+			if len(os.Args) < 4 {
+				fmt.Println("Error: taptree encode requires at least one input argument")
+				fmt.Println("Usage: noa taptree encode <input1> [input2] ...")
+				os.Exit(1)
+			}
+			inputs := os.Args[3:]
+			if err := command.RunTaptreeEncode(inputs); err != nil {
+				fmt.Printf("Error: %v\n", err)
+				os.Exit(1)
+			}
+		default:
+			fmt.Printf("Unknown taptree subcommand: %s\n", subcmd)
+			fmt.Println("Usage: noa taptree <decode|encode> [arguments]")
+			os.Exit(1)
+		}
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)
 		printUsage()
@@ -49,6 +84,7 @@ func printUsage() {
 	fmt.Println("Usage: noa <command> [arguments]")
 	fmt.Println("\nAvailable commands:")
 	fmt.Println("  address <address_ark>")
-	fmt.Println("  vtxos <address_ark> [indexer_url]  (default indexer_url: https://arkade.computer)")
 	fmt.Println("  script <script_hex>")
+	fmt.Println("  taptree decode <input>")
+	fmt.Println("  taptree encode <input1> [input2] ...")
 }
