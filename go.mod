@@ -2,10 +2,22 @@ module github.com/louisinger/noa
 
 go 1.25.3
 
+replace github.com/btcsuite/btcd/btcec/v2 => github.com/btcsuite/btcd/btcec/v2 v2.3.3
+
 require (
-	github.com/arkade-os/arkd/pkg/ark-lib v0.8.0
+	github.com/arkade-os/arkd/pkg/ark-lib v0.8.1-0.20251029114835-d33f27e11343
+	github.com/arkade-os/go-sdk v0.8.1
 	github.com/btcsuite/btcd v0.24.3-0.20240921052913-67b8efd3ba53
 	github.com/charmbracelet/lipgloss v1.1.0
+)
+
+require (
+	github.com/btcsuite/btcd/btcutil/psbt v1.1.9 // indirect
+	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/grpc v1.71.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 )
 
 require (
@@ -23,9 +35,11 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/meshapi/grpc-api-gateway v0.1.0 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 )

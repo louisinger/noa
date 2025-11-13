@@ -27,6 +27,17 @@ func main() {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
+	case "script":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: script command requires a script_hex argument")
+			fmt.Println("Usage: noa script <script_hex>")
+			os.Exit(1)
+		}
+		scriptHex := os.Args[2]
+		if err := command.RunScript(scriptHex); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)
 		printUsage()
@@ -35,7 +46,9 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println("Usage: noa address <address_ark>")
+	fmt.Println("Usage: noa <command> [arguments]")
 	fmt.Println("\nAvailable commands:")
 	fmt.Println("  address <address_ark>")
+	fmt.Println("  vtxos <address_ark> [indexer_url]  (default indexer_url: https://arkade.computer)")
+	fmt.Println("  script <script_hex>")
 }
