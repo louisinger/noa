@@ -38,6 +38,30 @@ func main() {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
+	case "note":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: note command requires a subcommand")
+			fmt.Println("Usage: noa note fromTxid <txid_string>")
+			os.Exit(1)
+		}
+		subcmd := os.Args[2]
+		switch subcmd {
+		case "fromTxid":
+			if len(os.Args) < 4 {
+				fmt.Println("Error: note fromTxid requires a txid_string argument")
+				fmt.Println("Usage: noa note fromTxid <txid_string>")
+				os.Exit(1)
+			}
+			txidString := os.Args[3]
+			if err := command.RunNoteFromTxid(txidString); err != nil {
+				fmt.Printf("Error: %v\n", err)
+				os.Exit(1)
+			}
+		default:
+			fmt.Printf("Unknown note subcommand: %s\n", subcmd)
+			fmt.Println("Usage: noa note fromTxid <txid_string>")
+			os.Exit(1)
+		}
 	case "taptree":
 		if len(os.Args) < 3 {
 			fmt.Println("Error: taptree command requires a subcommand")
@@ -85,6 +109,7 @@ func printUsage() {
 	fmt.Println("\nAvailable commands:")
 	fmt.Println("  address <address_ark>")
 	fmt.Println("  script <script_hex>")
+	fmt.Println("  note fromTxid <txid_string>")
 	fmt.Println("  taptree decode <input>")
 	fmt.Println("  taptree encode <input1> [input2] ...")
 }
