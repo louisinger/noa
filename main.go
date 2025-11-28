@@ -97,6 +97,30 @@ func main() {
 			fmt.Println("Usage: noa taptree <decode|encode> [arguments]")
 			os.Exit(1)
 		}
+	case "psbt":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: psbt command requires a subcommand")
+			fmt.Println("Usage: noa psbt decode <psbt_base64_or_hex>")
+			os.Exit(1)
+		}
+		subcmd := os.Args[2]
+		switch subcmd {
+		case "decode":
+			if len(os.Args) < 4 {
+				fmt.Println("Error: psbt decode requires a psbt_base64_or_hex argument")
+				fmt.Println("Usage: noa psbt decode <psbt_base64_or_hex>")
+				os.Exit(1)
+			}
+			psbtInput := os.Args[3]
+			if err := command.RunPsbtDecode(psbtInput); err != nil {
+				fmt.Printf("Error: %v\n", err)
+				os.Exit(1)
+			}
+		default:
+			fmt.Printf("Unknown psbt subcommand: %s\n", subcmd)
+			fmt.Println("Usage: noa psbt decode <psbt_base64_or_hex>")
+			os.Exit(1)
+		}
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)
 		printUsage()
@@ -112,4 +136,5 @@ func printUsage() {
 	fmt.Println("  note fromTxid <txid_string>")
 	fmt.Println("  taptree decode <input>")
 	fmt.Println("  taptree encode <input1> [input2] ...")
+	fmt.Println("  psbt decode <psbt_base64_or_hex>")
 }
