@@ -1,16 +1,36 @@
-.PHONY: build run clean install test
+.PHONY: build build-all run clean install test
 
 # Binary name
 BINARY_NAME=noa
+
+# Version (can be overridden)
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
 # Build the binary
 build:
 	@echo "Building $(BINARY_NAME)..."
 	@go build -o $(BINARY_NAME) .
 
-# Run the application
-run: build
-	@./$(BINARY_NAME) address test-address
+# Build for all platforms
+build-all: clean-dist
+	@echo "Building $(BINARY_NAME) for all platforms..."
+	@mkdir -p dist
+	
+	@echo "Building for Linux (amd64)..."
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/$(BINARY_NAME)-linux-amd64 .
+	
+	@echo "Building for Linux (arm64)..."
+	@GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/$(BINARY_NAME)-linux-arm64 .
+	
+	@echo "Building for macOS (amd64)..."
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/$(BINARY_NAME)-darwin-amd64 .
+	
+	@echo "Building for macOS (arm64)..."
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/$(BINARY_NAME)-darwin-arm64 .
+	
+	@echo "Done! Binaries in dist/"
+	@ls -la dist/
+
 
 # Install the binary to GOPATH/bin or GOBIN
 install:
@@ -18,10 +38,14 @@ install:
 	@go install .
 
 # Clean build artifacts
-clean:
+clean: clean-dist
 	@echo "Cleaning..."
 	@go clean
 	@rm -f $(BINARY_NAME)
+
+# Clean dist folder
+clean-dist:
+	@rm -rf dist/
 
 # Run tests
 test:
