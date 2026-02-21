@@ -121,6 +121,43 @@ func main() {
 			fmt.Println("Usage: noa psbt decode <psbt_base64_or_hex>")
 			os.Exit(1)
 		}
+	case "asset":
+		if len(os.Args) < 3 {
+			fmt.Println("Error: asset command requires a subcommand")
+			fmt.Println("Usage: noa asset packet decode <hex_script>")
+			os.Exit(1)
+		}
+		subcmd := os.Args[2]
+		switch subcmd {
+		case "packet":
+			if len(os.Args) < 4 {
+				fmt.Println("Error: asset packet requires a subcommand")
+				fmt.Println("Usage: noa asset packet decode <hex_script>")
+				os.Exit(1)
+			}
+			packetCmd := os.Args[3]
+			switch packetCmd {
+			case "decode":
+				if len(os.Args) < 5 {
+					fmt.Println("Error: asset packet decode requires a hex_script argument")
+					fmt.Println("Usage: noa asset packet decode <hex_script>")
+					os.Exit(1)
+				}
+				hexScript := os.Args[4]
+				if err := command.RunAssetPacketDecode(hexScript); err != nil {
+					fmt.Printf("Error: %v\n", err)
+					os.Exit(1)
+				}
+			default:
+				fmt.Printf("Unknown asset packet subcommand: %s\n", packetCmd)
+				fmt.Println("Usage: noa asset packet decode <hex_script>")
+				os.Exit(1)
+			}
+		default:
+			fmt.Printf("Unknown asset subcommand: %s\n", subcmd)
+			fmt.Println("Usage: noa asset packet decode <hex_script>")
+			os.Exit(1)
+		}
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)
 		printUsage()
@@ -137,4 +174,5 @@ func printUsage() {
 	fmt.Println("  taptree decode <input>")
 	fmt.Println("  taptree encode <input1> [input2] ...")
 	fmt.Println("  psbt decode <psbt_base64_or_hex>")
+	fmt.Println("  asset packet decode <hex_script>")
 }
