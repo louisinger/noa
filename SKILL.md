@@ -27,6 +27,7 @@ Start here when the user describes a problem:
 | "Round not progressing / not starting" | `GET /v1/info` → check arkd logs → verify scheduler config |
 | "Balance is wrong / shows 0" | Check `balance.recoverable`, `preconfirmed`, `boarding` states |
 | "I don't understand this address/script/PSBT" | Decode with `noa`, explain all components |
+| "What asset is this? / Asset info unclear" | `noa asset packet decode <hex>` or check `noa psbt decode` output |
 | "Server not responding" | `GET /v1/info` → check config → see **skilldocs/arkd-server.md** |
 | "TypeScript SDK issue" | See **skilldocs/ts-sdk-debugging.md** |
 
@@ -44,6 +45,7 @@ Start here when the user describes a problem:
 | Taptree (hex) | `noa taptree decode <hex>` |
 | Transaction ID (for note) | `noa note fromTxid <txid>` |
 | Scripts to combine | `noa taptree encode <s1> <s2>...` |
+| Asset packet (hex script) | `noa asset packet decode <hex>` |
 
 ### `curl` — REST API (Network Required)
 
@@ -131,8 +133,19 @@ noa psbt decode <psbt_base64>
 #   VtxoTaprootTree — what are the spending conditions?
 #   CosignerPublicKey — who needs to cosign?
 #   ConditionWitness  — is a preimage provided?
+#   AssetPacket     — asset details (if present in outputs)
 
 noa script <script_from_vtxo_tree>  # decode each script individually
+```
+
+### Decode Asset Packets
+```bash
+noa asset packet decode <hex_script>
+# Decodes Arkade Asset packets from OP_RETURN output scripts
+# Shows: Asset ID, type (issuance/transfer/reissuance), amounts, metadata
+
+# Asset packets are also shown automatically in PSBT decode output
+noa psbt decode <psbt>  # check outputs for AssetPacket field
 ```
 
 ### Fetch and Decode a VTXO (API + noa combined)
@@ -191,6 +204,10 @@ curl -s "https://arkade.computer/v1/indexer/virtualTx/$TXIDS" \
 **"Is this a valid Ark address?"** — `noa address <addr>` → success = valid; error = report message
 
 **"What are the spending conditions?"** — `noa script <hex>` → explain closure type + required signers/timelocks
+
+**"What asset is in this output?"** — `noa asset packet decode <hex>` → shows Asset ID, type, amounts, metadata
+
+**"Does this PSBT involve assets?"** — `noa psbt decode <psbt>` → check outputs for `AssetPacket` field
 
 ---
 
