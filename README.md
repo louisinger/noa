@@ -72,6 +72,21 @@ noa taptree encode <script1_hex> [script2_hex] ...
 
 Encodes one or more scripts into a taptree and displays the encoded taptree (hex).
 
+### asset
+
+#### packet decode
+
+```bash
+noa asset packet decode <script_hex>
+```
+
+Decodes an asset packet from a script (hex-encoded) and displays:
+- Asset ID
+- Asset amount
+- Asset metadata (if present)
+
+Asset packets are encoded in Bitcoin scripts and contain information about assets being transferred in Ark transactions.
+
 ### psbt
 
 #### decode
@@ -96,5 +111,6 @@ Decodes a PSBT (Partially Signed Bitcoin Transaction) from base64 or hex format 
   - Value and script (hex and asm)
   - Redeem scripts and witness scripts
   - BIP32 derivation paths
+  - **Asset packet information** (when present in output scripts)
 
 The command automatically detects whether the input is base64 or hex encoded.

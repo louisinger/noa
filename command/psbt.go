@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/arkade-os/arkd/pkg/ark-lib/asset"
 	"github.com/arkade-os/arkd/pkg/ark-lib/txutils"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil/psbt"
@@ -158,6 +159,9 @@ func RunPsbtDecode(psbtInput string) error {
 				valueStyle.Render(disasm),
 			)
 		}
+
+		// Try to decode asset packet from OP_RETURN
+		output += formatAssetPacketFromOutput(txOut.PkScript)
 
 		// PSBT output specific data
 		if i < len(p.Outputs) {
@@ -324,6 +328,130 @@ func formatArkPsbtFields(p *psbt.Packet, inputIndex int) string {
 			output += fmt.Sprintf("%s%s\n",
 				subLabelStyle.Render("        Value:"),
 				valueStyle.Render(fmt.Sprintf("%d", expiry.Value)),
+			)
+		}
+	}
+
+	return output
+}
+
+// formatAssetPacketFromOutput tries to decode an asset packet from an output script
+// and returns formatted output if successful, empty string otherwise
+func formatAssetPacketFromOutput(pkScript []byte) string {
+	// Try to decode as asset packet (handles both raw packet and OP_RETURN wrapped)
+	packet, err := asset.NewPacketFromScript(pkScript)
+	if err != nil {
+		return ""
+	}
+
+	// Successfully decoded asset packet - format it with indentation
+	var output string
+	output += fmt.Sprintf("%s\n",
+		subLabelStyle.Render(fmt.Sprintf("  Asset Packet (%d groups):", len(packet))),
+	)
+
+	for i, group := range packet {
+		output += formatAssetGroupIndented(i, &group, "    ")
+	}
+
+	return output
+}
+
+// formatAssetGroupIndented formats a single asset group with custom indentation
+func formatAssetGroupIndented(index int, group *asset.AssetGroup, indent string) string {
+	var output string
+
+	output += fmt.Sprintf("%s\n",
+		subLabelStyle.Render(fmt.Sprintf("%s[Group %d]:", indent, index)),
+	)
+
+	// Asset ID
+	if group.AssetId != nil {
+		output += fmt.Sprintf("%s%s\n",
+			subLabelStyle.Render(indent+"  AssetId:"),
+			valueStyle.Render(fmt.Sprintf("%s:%d", group.AssetId.Txid.String(), group.AssetId.Index)),
+		)
+	} else {
+		output += fmt.Sprintf("%s%s\n",
+			subLabelStyle.Render(indent+"  AssetId:"),
+			valueStyle.Render("<new issuance>"),
+		)
+	}
+
+	// Type
+	groupType := "transfer"
+	if group.IsIssuance() {
+		groupType = "issuance"
+	} else if group.IsReissuance() {
+		groupType = "reissuance"
+	}
+	output += fmt.Sprintf("%s%s\n",
+		subLabelStyle.Render(indent+"  Type:"),
+		valueStyle.Render(groupType),
+	)
+
+	// Control Asset
+	if group.ControlAsset != nil {
+		output += fmt.Sprintf("%s\n",
+			subLabelStyle.Render(indent+"  ControlAsset:"),
+		)
+		switch group.ControlAsset.Type {
+		case asset.AssetRefByID:
+			output += fmt.Sprintf("%s%s\n",
+				subLabelStyle.Render(indent+"    ById:"),
+				valueStyle.Render(fmt.Sprintf("%s:%d", group.ControlAsset.AssetId.Txid.String(), group.ControlAsset.AssetId.Index)),
+			)
+		case asset.AssetRefByGroup:
+			output += fmt.Sprintf("%s%s\n",
+				subLabelStyle.Render(indent+"    ByGroup:"),
+				valueStyle.Render(fmt.Sprintf("%d", group.ControlAsset.GroupIndex)),
+			)
+		}
+	}
+
+	// Metadata
+	if len(group.Metadata) > 0 {
+		output += fmt.Sprintf("%s\n",
+			subLabelStyle.Render(indent+"  Metadata:"),
+		)
+		for _, md := range group.Metadata {
+			output += fmt.Sprintf("%s%s\n",
+				subLabelStyle.Render(fmt.Sprintf("%s    %s:", indent, string(md.Key))),
+				valueStyle.Render(string(md.Value)),
+			)
+		}
+	}
+
+	// Inputs
+	if len(group.Inputs) > 0 {
+		output += fmt.Sprintf("%s\n",
+			subLabelStyle.Render(indent+"  Inputs:"),
+		)
+		for j, in := range group.Inputs {
+			switch in.Type {
+			case asset.AssetInputTypeLocal:
+				output += fmt.Sprintf("%s%s\n",
+					subLabelStyle.Render(fmt.Sprintf("%s    [%d]:", indent, j)),
+					valueStyle.Render(fmt.Sprintf("local vin:%d amount:%d", in.Vin, in.Amount)),
+				)
+			case asset.AssetInputTypeIntent:
+				output += fmt.Sprintf("%s%s\n",
+					subLabelStyle.Render(fmt.Sprintf("%s    [%d]:", indent, j)),
+					valueStyle.Render(fmt.Sprintf("intent txid:%s vout:%d amount:%d", in.Txid.String(), in.Vin, in.Amount)),
+				)
+			}
+		}
+	}
+
+	// Outputs
+	if len(group.Outputs) > 0 {
+		output += fmt.Sprintf("%s\n",
+			subLabelStyle.Render(indent+"  Outputs:"),
+		)
+		for j, out := range group.Outputs {
+			output += fmt.Sprintf("%s%s\n",
+				subLabelStyle.Render(fmt.Sprintf("%s    [%d]:", indent, j)),
+				valueStyle.Render(fmt.Sprintf("vout:%d amount:%d", out.Vout, out.Amount)),
 			)
 		}
 	}

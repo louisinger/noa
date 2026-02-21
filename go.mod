@@ -1,9 +1,9 @@
 module github.com/louisinger/noa
 
-go 1.25.3
+go 1.25.7
 
 require (
-	github.com/arkade-os/arkd/pkg/ark-lib v0.8.1-0.20251029114835-d33f27e11343
+	github.com/arkade-os/arkd/pkg/ark-lib v0.8.1-0.20260220163635-76f077b0e63b
 	github.com/btcsuite/btcd v0.24.3-0.20240921052913-67b8efd3ba53
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
@@ -13,6 +13,7 @@ require (
 require github.com/btcsuite/btcd/btcutil/psbt v1.1.9
 
 require (
+	github.com/arkade-os/arkd/pkg/errors v0.0.0-20260220163635-76f077b0e63b // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
@@ -27,8 +28,10 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
+	google.golang.org/grpc v1.76.0 // indirect
 )
