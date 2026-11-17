@@ -7,7 +7,7 @@ import (
 	arklib "github.com/arkade-os/arkd/pkg/ark-lib"
 	"github.com/arkade-os/arkd/pkg/ark-lib/script"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
-	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/txscript/v2"
 )
 
 func RunScript(scriptHex string) error {
@@ -30,15 +30,24 @@ func RunScript(scriptHex string) error {
 		valueStyle.Render(disasm),
 	)
 
-	closure, err := script.DecodeClosure(scriptBytes)
+	// Hex alone cannot identify the execution environment. Preserve Bitcoin ASM
+	// and show the Arkade interpretation when its opcode names differ.
+	arkadeASM, err := disasmArkadeScript(scriptBytes)
 	if err != nil {
-		return fmt.Errorf("failed to decode closure: %w", err)
+		return fmt.Errorf("failed to disassemble Arkade script: %w", err)
+	}
+	if arkadeASM != disasm {
+		output += fmt.Sprintf("%s%s\n",
+			subLabelStyle.Render("arkade asm:"),
+			valueStyle.Render(arkadeASM),
+		)
 	}
 
-	output += sectionStyle.Render("\nClosure: ")
-
-	// Print closure type and fields using type switch
-	output += formatClosure(closure)
+	closure, err := script.DecodeClosure(scriptBytes)
+	if err == nil {
+		output += sectionStyle.Render("\nClosure: ")
+		output += formatClosure(closure)
+	}
 
 	fmt.Print(output)
 	return nil

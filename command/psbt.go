@@ -11,19 +11,18 @@ import (
 	"github.com/arkade-os/arkd/pkg/ark-lib/asset"
 	"github.com/arkade-os/arkd/pkg/ark-lib/txutils"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
-	"github.com/btcsuite/btcd/btcutil/psbt"
-	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/psbt/v2"
+	"github.com/btcsuite/btcd/txscript/v2"
 )
 
 func RunPsbtDecode(psbtInput string) error {
 	var psbtBytes []byte
 	var err error
 
-	// Try base64 first (most common for PSBT)
-	psbtBytes, err = base64.StdEncoding.DecodeString(strings.TrimSpace(psbtInput))
+	// Hex strings can also be valid base64, so check hex first.
+	psbtBytes, err = hex.DecodeString(strings.TrimSpace(psbtInput))
 	if err != nil {
-		// Fall back to hex
-		psbtBytes, err = hex.DecodeString(strings.TrimSpace(psbtInput))
+		psbtBytes, err = base64.StdEncoding.DecodeString(strings.TrimSpace(psbtInput))
 		if err != nil {
 			return fmt.Errorf("failed to decode PSBT (tried base64 and hex): %w", err)
 		}
@@ -338,8 +337,7 @@ func formatArkPsbtFields(p *psbt.Packet, inputIndex int) string {
 // formatAssetPacketFromOutput tries to decode an asset packet from an output script
 // and returns formatted output if successful, empty string otherwise
 func formatAssetPacketFromOutput(pkScript []byte) string {
-	// Try to decode as asset packet (handles both raw packet and OP_RETURN wrapped)
-	packet, err := asset.NewPacketFromScript(pkScript)
+	packet, err := decodeAssetPacketScript(pkScript)
 	if err != nil {
 		return ""
 	}

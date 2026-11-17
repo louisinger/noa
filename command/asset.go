@@ -1,10 +1,14 @@
 package command
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/arkade-os/arkd/pkg/ark-lib/asset"
+	"github.com/arkade-os/arkd/pkg/ark-lib/extension"
+	"github.com/btcsuite/btcd/txscript/v2"
 )
 
 // RunAssetPacketDecode decodes an asset packet from hex (raw packet or OP_RETURN script)
@@ -18,13 +22,56 @@ func RunAssetPacketDecode(input string) error {
 
 	var packet asset.Packet
 
-	// Try to parse as full OP_RETURN script first
-	packet, err = asset.NewPacketFromScript(scriptBytes)
+	if len(scriptBytes) > 0 && scriptBytes[0] == txscript.OP_RETURN {
+		packet, err = decodeAssetPacketScript(scriptBytes)
+		if err != nil {
+			// A raw packet's group count can also begin with byte 0x6a.
+			if rawPacket, rawErr := asset.NewPacketFromBytes(scriptBytes); rawErr == nil {
+				packet, err = rawPacket, nil
+			}
+		}
+	} else {
+		packet, err = asset.NewPacketFromBytes(scriptBytes)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to decode asset packet: %w", err)
 	}
 
 	return printAssetPacket(packet)
+}
+
+// decodeAssetPacketScript accepts current ARK extensions and the legacy
+// OP_RETURN ARK + asset marker + packet encoding used by earlier Arkd versions.
+func decodeAssetPacketScript(script []byte) (asset.Packet, error) {
+	ext, extensionErr := extension.NewExtensionFromBytes(script)
+	if extensionErr == nil {
+		if packet := ext.GetAssetPacket(); packet != nil {
+			return packet, nil
+		}
+		return nil, fmt.Errorf("extension contains no asset packet")
+	}
+
+	tokenizer := txscript.MakeScriptTokenizer(0, script)
+	if !tokenizer.Next() || tokenizer.Opcode() != txscript.OP_RETURN {
+		return nil, extensionErr
+	}
+	var payload []byte
+	for tokenizer.Next() {
+		if len(tokenizer.Data()) == 0 {
+			return nil, extensionErr
+		}
+		payload = append(payload, tokenizer.Data()...)
+	}
+	if err := tokenizer.Err(); err != nil {
+		return nil, err
+	}
+	legacyPrefix := []byte{'A', 'R', 'K', asset.PacketType}
+	if bytes.HasPrefix(payload, legacyPrefix) {
+		if packet, err := asset.NewPacketFromBytes(payload[len(legacyPrefix):]); err == nil {
+			return packet, nil
+		}
+	}
+	return nil, extensionErr
 }
 
 // printAssetPacket outputs a formatted asset packet
@@ -147,6 +194,7 @@ func formatAssetGroup(index int, group *asset.AssetGroup) string {
 
 // cleanHexInput removes common prefixes and whitespace from hex input
 func cleanHexInput(input string) string {
+	input = strings.Join(strings.Fields(input), "")
 	// Remove 0x prefix if present
 	if len(input) >= 2 && input[:2] == "0x" {
 		input = input[2:]

@@ -4,6 +4,8 @@ Your Ark companion.
 
 ## Installation
 
+Building requires Go 1.27.3 or newer.
+
 ```bash
 go install github.com/louisinger/noa@latest
 ```
@@ -35,8 +37,14 @@ noa script <script_hex>
 ```
 
 Decodes a script and displays:
-- ASM disassembly
-- Ark Closure information (type and fields)
+- Bitcoin ASM disassembly (`asm:`)
+- Arkade ASM (`arkade asm:`) when opcode names differ, using the emulator package
+- Ark Closure information (type and fields), when the script matches a known closure
+
+Both use the same command. Hex alone cannot distinguish the execution environment,
+so the original Bitcoin interpretation is preserved alongside the Arkade interpretation.
+Arbitrary covenant scripts can be decoded without matching a closure. Malformed hex
+or truncated script data still returns an error.
 
 ### note
 
@@ -80,7 +88,8 @@ Encodes one or more scripts into a taptree and displays the encoded taptree (hex
 noa asset packet decode <script_hex>
 ```
 
-Decodes an asset packet from a script (hex-encoded) and displays:
+Decodes a hex-encoded asset packet (raw bytes, an ARK extension output, or a legacy
+asset output script) and displays:
 - Asset ID
 - Asset amount
 - Asset metadata (if present)
